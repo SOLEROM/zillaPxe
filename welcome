@@ -13,5 +13,7 @@ sudo /usr/local/bin/docker-entrypoint.sh
 > sudo dnsmasq --no-daemon --interface=enx482ae38e0650 --bind-interfaces --dhcp-range=15.0.0.2,proxy
 
 
+mount.nfs  127.0.0.1:/ /mnt
+
 ####################################################################################
 

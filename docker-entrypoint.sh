@@ -1,29 +1,38 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 
-# 0. runtime dirs
-mkdir -p /var/run/sshd /run/rpcbind /proc/fs/nfsd /var/run/samba
+# ---------------------------------------------------------------------------
+# Runtime directories
+# ---------------------------------------------------------------------------
+mkdir -p /var/run/sshd /run/rpcbind
 
-# 1. rpcbind for all ONC-RPC services
-rpcbind -w
-
-# 2. kernel NFS threads (v4)
-rpc.nfsd -G 15
-
-# 3. rpc.mountd (v3 export list – helps showmount)
-rpc.mountd -F &
-
-# 4. export table -> kernel
-exportfs -r
-
-# 5. dnsmasq (DHCP/TFTP/PXE)
-if ! pgrep -x dnsmasq >/dev/null 2>&1; then
-  dnsmasq -k --log-facility=- &
+# Ensure the nfsd pseudo–fs is mounted (needs SYS_ADMIN)
+if ! mountpoint -q /proc/fs/nfsd; then
+    mkdir -p /proc/fs/nfsd
+    mount -t nfsd nfsd /proc/fs/nfsd || {
+        echo "Cannot mount nfsd – start container with --privileged or SYS_ADMIN"
+        exit 1
+    }
 fi
 
-# 6. Samba (SMB/CIFS)
-nmbd -D            # NetBIOS name server
-smbd -D            # SMB file server
+# 1. rpcbind (portmapper)
+rpcbind -w
 
-# 7. hand off to CMD (default: sshd -D -p 2222)
+# 2. Export table
+exportfs -ar          # read /etc/exports
+
+# 3. Start NFSD kernel threads
+rpc.nfsd 8            # add "-G 15" for grace period if you wish
+
+# 4. mountd (for showmount/NFSv3)
+rpc.mountd -F &
+
+# 5. dnsmasq (PXE/DHCP/TFTP)
+pgrep -x dnsmasq >/dev/null || dnsmasq -k --log-facility=- &
+
+# 6. Samba
+nmbd -D
+smbd -D
+
+# 7. Hand off to CMD (default sshd)
 exec "$@"

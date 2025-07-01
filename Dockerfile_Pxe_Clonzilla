@@ -29,7 +29,7 @@ ENV TEMP_SYSLINUX_PATH=/tmp/syslinux-${SYSLINUX_VERSION}
 # --------------------------------------------------------------------------- #
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        vim wget \
+        vim wget iproute2 net-tools \
         dnsmasq \
         openssh-server \
         nfs-kernel-server rpcbind \
@@ -50,7 +50,7 @@ RUN echo 'root:root' | chpasswd && \
 # NFS export                                                                  #
 # --------------------------------------------------------------------------- #
 RUN mkdir -p /home/nfs && chown nobody:nogroup /home/nfs && \
-    echo '/home/nfs *(rw,sync,no_subtree_check,insecure,fsid=0,no_root_squash)' > /etc/exports
+    echo '/home/nfs *(rw,sync,no_subtree_check,insecure,no_root_squash,fsid=0,crossmnt)' > /etc/exports
 
 # --------------------------------------------------------------------------- #
 # Samba share (/home/samba - public, guest-writable)                          #
