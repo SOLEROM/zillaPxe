@@ -98,7 +98,7 @@ RUN  chmod +x /usr/local/bin/save_changes
 ## global aliases
 RUN echo "alias c='clear'" | tee -a /etc/bash.bashrc
 RUN echo "alias tit='source /local/tit.sh $$1'" | tee -a /etc/bash.bashrc
-RUN echo "tit $(CONTAINER_NAME)" | tee -a /home/user/.bashrc
+RUN echo "tit $(CONTAINER_NAME)" | tee -a /etc/bash.bashrc
 ## tit
 RUN cat > /local/tit.sh <<'EOSCRIPT'
 #!/usr/bin/env bash
@@ -177,12 +177,10 @@ run:
 	else \
 		echo "Running Docker container with GUI support: $(CONTAINER_NAME)"; \
 		docker run --privileged --name $(CONTAINER_NAME) --rm -d --net=host \
-			--user $(shell id -u):$(shell id -g) \
 			-v /var/run/docker.sock:/var/run/docker.sock \
 			-v /tmp/.X11-unix:/tmp/.X11-unix \
 			-v ./clonzilla_nfs_storage:/home/nfs \
 			-e DISPLAY=$(DISPLAY) \
-			$(if $(SHARE),-v $(SHARE):/home/user/shared:rw) \
 			$(IMAGE_NAME) sleep infinity; \
 		$(MAKE) connect; \
 	fi
