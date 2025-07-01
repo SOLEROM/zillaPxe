@@ -1,0 +1,8 @@
+.vagrant
+*.tar
+*.zip
+*.deb
+## clonezilla live unpacked
+filesystem.squashfs
+vmlinuz
+initrd.img

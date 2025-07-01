@@ -1,0 +1,84 @@
+FROM ubuntu:22.04 AS common-base
+
+# Set environment variables to avoid timezone prompt
+ENV DEBIAN_FRONTEND=noninteractive 
+ENV TZ=Etc/UTC
+
+# Install basic dependencies
+RUN apt-get update && apt-get install -y \
+    sudo \
+    docker.io \
+    software-properties-common \
+    tzdata \
+    iputils-ping \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set up a user with no password sudo
+RUN mkdir -p /etc/sudoers.d && \
+    useradd -m user -s /bin/bash && \
+    echo "user:user" | chpasswd && \
+    echo "user ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/user
+
+# Ensure the shared directory exists
+RUN mkdir -p /home/user/shared && \
+    chown -R user:user /home/user/shared
+
+USER user
+WORKDIR /home/user
+
+# Add .local/bin to PATH for user-specific scripts
+ENV PATH="/home/user/.local/bin:${PATH}"
+
+# Set the default shell to bash
+CMD ["/bin/bash"]
+
+# Extend the common-base to install additional packages
+FROM common-base AS final
+
+
+
+
+ENV MEMTEST_VERSION 5.31b
+ENV SYSLINUX_VERSION 6.03
+ENV TEMP_SYSLINUX_PATH /tmp/syslinux-"$SYSLINUX_VERSION"
+
+USER root
+RUN apt-get update && apt-get install -y \
+    vim wget dnsmasq \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+
+WORKDIR /tmp
+RUN \
+  mkdir -p "$TEMP_SYSLINUX_PATH" \
+  && wget -q https://www.kernel.org/pub/linux/utils/boot/syslinux/syslinux-"$SYSLINUX_VERSION".tar.gz \
+  && tar -xzf syslinux-"$SYSLINUX_VERSION".tar.gz \
+  && mkdir -p /var/lib/tftpboot \
+  && cp "$TEMP_SYSLINUX_PATH"/bios/core/pxelinux.0 /var/lib/tftpboot/ \
+  && cp "$TEMP_SYSLINUX_PATH"/bios/com32/libutil/libutil.c32 /var/lib/tftpboot/ \
+  && cp "$TEMP_SYSLINUX_PATH"/bios/com32/elflink/ldlinux/ldlinux.c32 /var/lib/tftpboot/ \
+  && cp "$TEMP_SYSLINUX_PATH"/bios/com32/menu/menu.c32 /var/lib/tftpboot/ \
+  && rm -rf "$TEMP_SYSLINUX_PATH" \
+  && rm /tmp/syslinux-"$SYSLINUX_VERSION".tar.gz \
+  && wget -q http://www.memtest.org/download/archives/"$MEMTEST_VERSION"/memtest86+-"$MEMTEST_VERSION".bin.gz \
+  && gzip -d memtest86+-"$MEMTEST_VERSION".bin.gz \
+  && mkdir -p /var/lib/tftpboot/memtest \
+  && mv memtest86+-$MEMTEST_VERSION.bin /var/lib/tftpboot/memtest/memtest86+
+
+# Configure PXE and TFTP
+COPY tftpboot/ /var/lib/tftpboot
+
+# Configure DNSMASQ
+COPY etc/ /etc
+
+COPY welcome /
+
+# Start dnsmasq. It picks up default configuration from /etc/dnsmasq.conf and
+# /etc/default/dnsmasq plus any command line switch
+
+#ENTRYPOINT ["dnsmasq", "--no-daemon"]
+#CMD ["--dhcp-range=15.0.0.2,proxy"]
+
+

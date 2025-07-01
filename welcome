@@ -1,0 +1,4 @@
+### welcom
+
+sudo dnsmasq --no-daemon --dhcp-range=15.0.0.2,proxy
+sudo dnsmasq --no-daemon --interface=enx482ae38e0650 --bind-interfaces --dhcp-range=15.0.0.2,proxy
