@@ -1,8 +1,6 @@
-LABEL memtest86
-  MENU LABEL Memtest86+ 2nd entry
-  KERNEL /memtest/memtest86+
 
-label Clonezilla-live
+
+label Clonezilla
 MENU LABEL Clonezilla Live (Ramdisk)
 KERNEL vmlinuz
 APPEND initrd=initrd.img boot=live username=user union=overlay config components quiet noswap edd=on nomodeset nodmraid keyboard-layouts=us locales=en_US.UTF-8  ocs_live_run="ocs-live-general" ocs_live_extra_param="" ocs_live_batch=no net.ifnames=0 nosplash noprompt fetch=tftp://15.0.0.2/filesystem.squashfs

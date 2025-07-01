@@ -180,7 +180,7 @@ run:
 			--user $(shell id -u):$(shell id -g) \
 			-v /var/run/docker.sock:/var/run/docker.sock \
 			-v /tmp/.X11-unix:/tmp/.X11-unix \
-			-v $(TAR_PATH):/save/ \
+			-v ./clonzilla_nfs_storage:/home/nfs \
 			-e DISPLAY=$(DISPLAY) \
 			$(if $(SHARE),-v $(SHARE):/home/user/shared:rw) \
 			$(IMAGE_NAME) sleep infinity; \
@@ -195,17 +195,7 @@ stop:
 	fi
 	@echo "Container $(CONTAINER_NAME) is not running."
 
-run-gpu:
-	@echo "Running Docker container with GUI and GPU support: $(CONTAINER_NAME)"
-	@docker run --name $(CONTAINER_NAME) --rm -it  --net=host \
-		--user $(shell id -u):$(shell id -g) \
-		-v /var/run/docker.sock:/var/run/docker.sock \
-		-v /tmp/.X11-unix:/tmp/.X11-unix \
-		-v $(TAR_PATH):/save/ \
-		-e DISPLAY=$(DISPLAY) \
-		--gpus all \
-		$(if $(SHARE),-v $(SHARE):/home/user/shared:rw) \
-		$(IMAGE_NAME)
+
 
 ###################################################################################
 ###################################  save  ########################################

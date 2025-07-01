@@ -6,3 +6,4 @@
 filesystem.squashfs
 vmlinuz
 initrd.img
+clonzilla_nfs_storage/
